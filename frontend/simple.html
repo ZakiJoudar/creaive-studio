@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Creative Studio - Simple Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #0f172a; color: #e2e8f0; font-family: system-ui; }
+        .btn { background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); 
+               color: white; padding: 12px 24px; border-radius: 10px; 
+               border: none; cursor: pointer; font-weight: 600; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .card { background: rgba(30, 41, 59, 0.8); border-radius: 16px; 
+                border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                🚀 AI Creative Studio - Simple Test
+            </h1>
+            <p class="text-slate-400">Working version with direct API calls</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Health Check -->
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🔍 Backend Status</h2>
+                <button onclick="checkHealth()" class="btn w-full mb-4">
+                    <i class="fas fa-heartbeat mr-2"></i> Check API Health
+                </button>
+                <div id="health-result" class="mt-4"></div>
+            </div>
+
+            <!-- Story Generator -->
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">📖 Story Generation</h2>
+                <input type="text" id="story-prompt" 
+                       placeholder="Enter story idea..." 
+                       class="w-full p-3 bg-slate-800 border border-slate-700 rounded-lg mb-3"
+                       value="A space explorer discovers an ancient alien artifact">
+                <select id="story-genre" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-lg mb-4">
+                    <option value="sci-fi">Science Fiction</option>
+                    <option value="fantasy">Fantasy</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                </select>
+                <button onclick="generateSimpleStory()" class="btn w-full">
+                    <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                    Generate Story (Llama 3 70B)
+                </button>
+                <div id="story-result" class="mt-4"></div>
+            </div>
+
+            <!-- Image Generator -->
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🎨 Image Generation</h2>
+                <input type="text" id="image-prompt" 
+                       placeholder="Describe the image..." 
+                       class="w-full p-3 bg-slate-800 border border-slate-700 rounded-lg mb-3"
+                       value="A majestic dragon flying over a medieval castle at sunset, anime style">
+                <button onclick="generateImage()" class="btn w-full mb-4">
+                    <i class="fas fa-image mr-2"></i>
+                    Generate Image (SDXL)
+                </button>
+                <div id="image-result" class="mt-4"></div>
+            </div>
+
+            <!-- API Status -->
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">📊 System Info</h2>
+                <div id="system-info" class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                        <div>Backend Status</div>
+                        <div id="backend-status" class="text-yellow-400">Unknown</div>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                        <div>Groq API</div>
+                        <div id="groq-status" class="text-red-400">Not tested</div>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
+                        <div>Hugging Face API</div>
+                        <div id="hf-status" class="text-red-400">Not tested</div>
+                    </div>
+                </div>
+                <button onclick="getSystemInfo()" class="btn w-full mt-4">
+                    <i class="fas fa-sync mr-2"></i> Refresh Status
+                </button>
+            </div>
+        </div>
+
+        <!-- Generated Content -->
+        <div id="generated-content" class="mt-8"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Direct fetch without CORS issues
+        async function fetchAPI(endpoint, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            
+            if (data && (method === 'POST' || method === 'PUT')) {
+                options.body = JSON.stringify(data);
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function checkHealth() {
+            const result = document.getElementById('health-result');
+            result.innerHTML = '<div class="text-yellow-400"><i class="fas fa-spinner fa-spin mr-2"></i>Checking...</div>';
+            
+            const data = await fetchAPI('/health');
+            
+            if (data.apis) {
+                result.innerHTML = `
+                    <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+                        <h3 class="font-bold text-green-300 mb-2">✅ Backend Running</h3>
+                        <div class="text-sm">
+                            <p><strong>Groq:</strong> ${data.apis.groq}</p>
+                            <p><strong>Hugging Face:</strong> ${data.apis.huggingface}</p>
+                            <p><strong>Status:</strong> ${data.status}</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Update status indicators
+                document.getElementById('backend-status').textContent = 'Running';
+                document.getElementById('backend-status').className = 'text-green-400';
+                document.getElementById('groq-status').textContent = data.apis.groq;
+                document.getElementById('groq-status').className = data.apis.groq === 'healthy' ? 'text-green-400' : 'text-red-400';
+                document.getElementById('hf-status').textContent = data.apis.huggingface;
+                document.getElementById('hf-status').className = data.apis.huggingface === 'healthy' ? 'text-green-400' : 'text-red-400';
+            } else {
+                result.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                        <h3 class="font-bold text-red-300 mb-2">❌ Backend Error</h3>
+                        <p>Check if backend is running on port 8000</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function generateSimpleStory() {
+            const prompt = document.getElementById('story-prompt').value;
+            const genre = document.getElementById('story-genre').value;
+            const resultDiv = document.getElementById('story-result');
+            
+            resultDiv.innerHTML = '<div class="text-yellow-400"><i class="fas fa-spinner fa-spin mr-2"></i>Generating story with Llama 3 70B...</div>';
+            
+            const data = await fetchAPI('/api/v1/story/generate', 'POST', {
+                prompt: prompt,
+                genre: genre,
+                style: 'anime',
+                model: 'llama3-70b-8192'
+            });
+            
+            if (data.success) {
+                const story = data.story;
+                resultDiv.innerHTML = `
+                    <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+                        <h3 class="font-bold text-green-300 mb-2">✅ Story Generated!</h3>
+                        <h4 class="text-xl font-bold mb-2">${story.title}</h4>
+                        <p class="text-sm mb-3">${story.characters?.length || 0} characters, ${story.scenes?.length || 0} scenes</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-800/50 p-3 rounded">
+                                <h5 class="font-bold">Characters</h5>
+                                ${(story.characters || []).slice(0, 3).map(char => `
+                                    <div class="text-sm mt-1">• ${char.name}</div>
+                                `).join('')}
+                            </div>
+                            <div class="bg-slate-800/50 p-3 rounded">
+                                <h5 class="font-bold">First Scene</h5>
+                                <div class="text-sm mt-1">${story.scenes?.[0]?.title || 'No scene'}</div>
+                            </div>
+                        </div>
+                        <button onclick="generatePanel('${story.scenes?.[0]?.visual_description || prompt}')" 
+                                class="btn mt-4 w-full">
+                            <i class="fas fa-image mr-2"></i>Generate First Panel
+                        </button>
+                    </div>
+                `;
+                
+                // Store story for later use
+                window.currentStory = story;
+                
+                // Show in main content area
+                showGeneratedStory(story);
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                        <h3 class="font-bold text-red-300 mb-2">❌ Generation Failed</h3>
+                        <p>${data.error || 'Check API keys in .env file'}</p>
+                        <p class="text-sm mt-2">Make sure your Groq API key is valid</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function generateImage() {
+            const prompt = document.getElementById('image-prompt').value;
+            const resultDiv = document.getElementById('image-result');
+            
+            resultDiv.innerHTML = '<div class="text-yellow-400"><i class="fas fa-spinner fa-spin mr-2"></i>Generating image with Stable Diffusion XL...</div>';
+            
+            const data = await fetchAPI('/api/v1/comic/generate-panel', 'POST', {
+                scene_description: prompt,
+                characters: [],
+                location: 'unknown',
+                mood: 'epic',
+                art_style: 'anime'
+            });
+            
+            if (data.success) {
+                const panel = data.panel;
+                resultDiv.innerHTML = `
+                    <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+                        <h3 class="font-bold text-green-300 mb-2">✅ Image Generated!</h3>
+                        <img src="${data.preview_url}" 
+                             alt="${prompt}"
+                             class="w-full h-64 object-cover rounded-lg mb-3">
+                        <p class="text-sm">${prompt.substring(0, 100)}...</p>
+                        <button onclick="downloadImage('${panel.image}')" class="btn mt-3 w-full">
+                            <i class="fas fa-download mr-2"></i>Download Image
+                        </button>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                        <h3 class="font-bold text-red-300 mb-2">❌ Image Generation Failed</h3>
+                        <p>${data.error || 'Check Hugging Face API token'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function generatePanel(sceneDescription) {
+            const data = await fetchAPI('/api/v1/comic/generate-panel', 'POST', {
+                scene_description: sceneDescription,
+                characters: [],
+                location: 'unknown',
+                mood: 'epic',
+                art_style: 'anime'
+            });
+            
+            if (data.success) {
+                showGeneratedPanel(data.panel);
+            }
+        }
+        
+        async function getSystemInfo() {
+            const data = await fetchAPI('/api/v1/system/info');
+            if (data.apis) {
+                document.getElementById('groq-status').textContent = data.apis.groq.status;
+                document.getElementById('groq-status').className = data.apis.groq.status === 'active' ? 'text-green-400' : 'text-red-400';
+                document.getElementById('hf-status').textContent = data.apis.huggingface.status;
+                document.getElementById('hf-status').className = data.apis.huggingface.status === 'active' ? 'text-green-400' : 'text-red-400';
+            }
+        }
+        
+        function showGeneratedStory(story) {
+            const contentDiv = document.getElementById('generated-content');
+            contentDiv.innerHTML = `
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-4">📚 Generated Story: ${story.title}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-800/50 p-4 rounded-lg">
+                            <h3 class="font-bold mb-3">Characters</h3>
+                            ${(story.characters || []).map(char => `
+                                <div class="mb-3 p-3 bg-slate-900/50 rounded">
+                                    <h4 class="font-bold">${char.name}</h4>
+                                    <p class="text-sm text-slate-400">${char.role}</p>
+                                    <p class="text-xs mt-1">${char.description?.substring(0, 100)}...</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="md:col-span-2">
+                            <h3 class="font-bold mb-3">Scenes</h3>
+                            <div class="space-y-3">
+                                ${(story.scenes || []).map(scene => `
+                                    <div class="p-4 bg-slate-800/50 rounded-lg">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <h4 class="font-bold">${scene.title}</h4>
+                                            <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">Scene ${scene.id}</span>
+                                        </div>
+                                        <p class="text-sm mb-2">${scene.description}</p>
+                                        <div class="flex text-xs text-slate-500">
+                                            <span class="mr-3"><i class="fas fa-map-marker mr-1"></i>${scene.location}</span>
+                                            <span><i class="fas fa-lightbulb mr-1"></i>${scene.mood}</span>
+                                        </div>
+                                        <button onclick="generatePanel('${scene.visual_description}')" 
+                                                class="btn mt-3 text-sm">
+                                            Generate Panel for this Scene
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showGeneratedPanel(panel) {
+            const contentDiv = document.getElementById('generated-content');
+            const panelHTML = `
+                <div class="card mt-4">
+                    <h3 class="text-xl font-bold mb-3">🎨 Generated Comic Panel</h3>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="md:w-2/3">
+                            <img src="${panel.preview_url || `data:image/png;base64,${panel.image}`}" 
+                                 alt="${panel.scene_description}"
+                                 class="w-full rounded-lg">
+                        </div>
+                        <div class="md:w-1/3">
+                            <h4 class="font-bold mb-2">Details</h4>
+                            <p class="text-sm mb-3">${panel.scene_description}</p>
+                            <div class="text-xs text-slate-500">
+                                <p><i class="fas fa-palette mr-2"></i>Style: ${panel.art_style}</p>
+                                <p><i class="fas fa-expand mr-2"></i>Size: ${panel.dimensions}</p>
+                                <p><i class="fas fa-calendar mr-2"></i>${new Date(panel.created_at).toLocaleTimeString()}</p>
+                            </div>
+                            <button onclick="downloadImage('${panel.image}')" class="btn w-full mt-4">
+                                <i class="fas fa-download mr-2"></i>Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            contentDiv.innerHTML += panelHTML;
+        }
+        
+        function downloadImage(base64Image) {
+            const link = document.createElement('a');
+            link.href = `data:image/png;base64,${base64Image}`;
+            link.download = `ai_art_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show success message
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg';
+            tempDiv.innerHTML = '<i class="fas fa-check mr-2"></i>Image downloaded!';
+            document.body.appendChild(tempDiv);
+            setTimeout(() => tempDiv.remove(), 3000);
+        }
+        
+        // Auto-check health on load
+        window.addEventListener('load', function() {
+            setTimeout(checkHealth, 1000);
+            setTimeout(getSystemInfo, 1500);
+        });
+    </script>
+</body>
+</html>

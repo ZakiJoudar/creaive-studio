@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🔧 API Configuration Test</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Health Check -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">🌐 Backend Status</h2>
+                <button onclick="checkHealth()" class="w-full bg-blue-600 p-3 rounded mb-4">
+                    Test Backend Connection
+                </button>
+                <div id="healthResult"></div>
+            </div>
+            
+            <!-- Story Test -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">📖 Test Story Generation</h2>
+                <input id="storyInput" type="text" 
+                       class="w-full p-3 bg-gray-700 rounded mb-3"
+                       value="A robot learning to paint sunsets">
+                <button onclick="testStory()" class="w-full bg-purple-600 p-3 rounded">
+                    Test Llama 3 70B
+                </button>
+                <div id="storyResult" class="mt-4"></div>
+            </div>
+            
+            <!-- Image Test -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">🎨 Test Image Generation</h2>
+                <input id="imageInput" type="text" 
+                       class="w-full p-3 bg-gray-700 rounded mb-3"
+                       value="A majestic dragon, anime style">
+                <button onclick="testImage()" class="w-full bg-green-600 p-3 rounded">
+                    Test Stable Diffusion
+                </button>
+                <div id="imageResult" class="mt-4"></div>
+            </div>
+            
+            <!-- System Info -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">📊 System Information</h2>
+                <button onclick="getSystemInfo()" class="w-full bg-yellow-600 p-3 rounded mb-4">
+                    Get System Info
+                </button>
+                <div id="systemInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        async function checkHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.innerHTML = '<div class="text-yellow-400">Checking...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                let html = '<div class="space-y-2">';
+                html += `<p><strong>Backend:</strong> ${data.backend}</p>`;
+                html += `<p><strong>Groq API:</strong> ${data.apis?.groq?.status || 'unknown'}</p>`;
+                html += `<p><strong>Hugging Face:</strong> ${data.apis?.huggingface?.status || 'unknown'}</p>`;
+                
+                if (data.apis?.groq?.status === 'healthy') {
+                    html += '<p class="text-green-400">✅ Groq API is working!</p>';
+                }
+                if (data.apis?.huggingface?.status === 'available') {
+                    html += '<p class="text-green-400">✅ Hugging Face is working!</p>';
+                }
+                
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="text-red-400">
+                        <p>❌ Backend not reachable</p>
+                        <p class="text-sm">Make sure backend is running on port 8000</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testStory() {
+            const prompt = document.getElementById('storyInput').value;
+            const resultDiv = document.getElementById('storyResult');
+            
+            resultDiv.innerHTML = '<div class="text-yellow-400">Generating story...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/story/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        genre: 'sci-fi',
+                        style: 'anime'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-900/30 p-4 rounded">
+                            <h3 class="text-green-400 font-bold">✅ Story Generated!</h3>
+                            <p><strong>Title:</strong> ${data.story.title}</p>
+                            <p><strong>Characters:</strong> ${data.details.characters_count}</p>
+                            <p><strong>Scenes:</strong> ${data.details.scenes_count}</p>
+                            <p class="text-sm text-gray-400">Using: ${data.api_info.model}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900/30 p-4 rounded">
+                            <h3 class="text-red-400 font-bold">❌ Failed</h3>
+                            <p>${data.error || 'Unknown error'}</p>
+                            <p class="text-sm">${data.message || ''}</p>
+                            <p class="text-xs mt-2">Check your Groq API key in .env file</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-900/30 p-4 rounded">
+                        <h3 class="text-red-400 font-bold">❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testImage() {
+            const prompt = document.getElementById('imageInput').value;
+            const resultDiv = document.getElementById('imageResult');
+            
+            resultDiv.innerHTML = '<div class="text-yellow-400">Generating image... (first time takes 30-60 seconds)</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/image/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        art_style: 'anime'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-900/30 p-4 rounded">
+                            <h3 class="text-green-400 font-bold">✅ Image Generated!</h3>
+                            <img src="${data.preview_url}" 
+                                 alt="${prompt}"
+                                 class="w-full h-48 object-cover rounded mt-2">
+                            <p class="text-sm mt-2">Using: ${data.api_info.provider}</p>
+                            <p class="text-xs text-gray-400">Note: First image loads the model</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900/30 p-4 rounded">
+                            <h3 class="text-red-400 font-bold">❌ Failed</h3>
+                            <p>${data.error || 'Unknown error'}</p>
+                            <p class="text-sm">${data.message || ''}</p>
+                            <p class="text-xs mt-2">Check your Hugging Face token in .env file</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-900/30 p-4 rounded">
+                        <h3 class="text-red-400 font-bold">❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function getSystemInfo() {
+            const resultDiv = document.getElementById('systemInfo');
+            resultDiv.innerHTML = '<div class="text-yellow-400">Loading...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/system/info`);
+                const data = await response.json();
+                
+                let html = '<div class="space-y-3">';
+                html += `<p><strong>System:</strong> ${data.system}</p>`;
+                html += `<p><strong>Version:</strong> ${data.version}</p>`;
+                html += `<p><strong>LLM Provider:</strong> ${data.models.llm.provider}</p>`;
+                html += `<p><strong>Image Provider:</strong> ${data.models.image.provider}</p>`;
+                html += `<p><strong>Art Styles:</strong> ${data.models.image.art_styles.join(', ')}</p>`;
+                html += '</div>';
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-400">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', checkHealth);
+    </script>
+</body>
+</html>

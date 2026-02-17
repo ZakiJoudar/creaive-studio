@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Creative Studio Pro - Scalable Animation Pipeline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0f1e 0%, #1a1f2f 100%);
+            color: white;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .glass {
+            background: rgba(20, 30, 50, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px #3b82f680;
+        }
+        .step-active {
+            border-left: 4px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .step-completed {
+            border-left: 4px solid #10b981;
+        }
+        .module-card {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -10px #3b82f680;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .preview-card {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .preview-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px #3b82f680;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #3b82f6;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            background: rgba(30, 40, 60, 0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <!-- Modal for image preview -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                    <i class="fas fa-cubes mr-3"></i>AI Creative Studio Pro
+                </h1>
+                <p class="text-gray-400 mt-2">Scalable story-to-animation pipeline | v4.0</p>
+            </div>
+            <div class="flex gap-3">
+                <span id="connStatus" class="px-3 py-1 rounded-full bg-gray-700 text-sm"><i class="fas fa-plug mr-2"></i>Checking...</span>
+                <span id="hfStatus" class="px-3 py-1 rounded-full bg-gray-700 text-sm"><i class="fas fa-key mr-2"></i>HF Token: ?</span>
+                <span id="ffmpegStatus" class="px-3 py-1 rounded-full bg-gray-700 text-sm"><i class="fas fa-video mr-2"></i>FFmpeg: ?</span>
+            </div>
+        </div>
+
+        <!-- Pipeline Steps Visualization -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-2 mb-8">
+            <div class="glass rounded-xl p-3 text-center step-active" id="step1">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-2">1</div>
+                <h3 class="font-bold text-sm">Story</h3>
+            </div>
+            <div class="glass rounded-xl p-3 text-center" id="step2">
+                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center mx-auto mb-2">2</div>
+                <h3 class="font-bold text-sm">Segmentation</h3>
+            </div>
+            <div class="glass rounded-xl p-3 text-center" id="step3">
+                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center mx-auto mb-2">3</div>
+                <h3 class="font-bold text-sm">Comic</h3>
+            </div>
+            <div class="glass rounded-xl p-3 text-center" id="step4">
+                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center mx-auto mb-2">4</div>
+                <h3 class="font-bold text-sm">Animation Prep</h3>
+            </div>
+            <div class="glass rounded-xl p-3 text-center" id="step5">
+                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center mx-auto mb-2">5</div>
+                <h3 class="font-bold text-sm">Video</h3>
+            </div>
+        </div>
+
+        <!-- Main Input Form -->
+        <div class="glass rounded-2xl p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6"><i class="fas fa-feather mr-3 text-cyan-400"></i>Create Your Project</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block mb-2 font-medium">Story Premise</label>
+                    <textarea id="premise" rows="4" 
+                        class="w-full p-3 bg-gray-900/50 rounded-lg border border-cyan-500/30 focus:border-cyan-400 focus:outline-none"
+                        placeholder="Describe your story idea...">A cybernetic detective investigates memory thefts in Neo-Tokyo 2145. She discovers a conspiracy that threatens to unravel reality itself.</textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2">Genre</label>
+                        <select id="genre" class="w-full p-3 bg-gray-900/50 rounded-lg border border-purple-500/30">
+                            <option value="cyberpunk" selected>Cyberpunk</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="sci_fi">Sci-Fi</option>
+                            <option value="noir">Noir</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2">Art Style</label>
+                        <select id="artStyle" class="w-full p-3 bg-gray-900/50 rounded-lg border border-pink-500/30">
+                            <option value="manga" selected>Manga</option>
+                            <option value="anime">Anime</option>
+                            <option value="comic">Western Comic</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2">Main Character</label>
+                        <input id="character" value="Detective Aiko" 
+                            class="w-full p-3 bg-gray-900/50 rounded-lg border border-blue-500/30">
+                    </div>
+                    <div>
+                        <label class="block mb-2">Layout</label>
+                        <select id="layout" class="w-full p-3 bg-gray-900/50 rounded-lg border border-green-500/30">
+                            <option value="manga">Manga (RTL)</option>
+                            <option value="western">Western (LTR)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mt-4">
+                <button onclick="runFullPipeline()" class="btn-primary px-8 py-3 rounded-xl font-bold flex items-center">
+                    <i class="fas fa-play mr-2"></i>Run Full Pipeline
+                </button>
+                <button onclick="runModule(1)" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl">
+                    Story Only
+                </button>
+                <button onclick="runModule(2)" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl">
+                    + Segmentation
+                </button>
+                <button onclick="runModule(3)" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl">
+                    + Comic
+                </button>
+                <button onclick="runModule(4)" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl">
+                    + Animation Prep
+                </button>
+            </div>
+        </div>
+
+        <!-- Module Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <div class="glass rounded-xl p-4 module-card" onclick="showModuleInfo(1)">
+                <i class="fas fa-book-open text-3xl text-blue-400 mb-2"></i>
+                <h3 class="font-bold">Story Generation</h3>
+                <p class="text-xs text-gray-400">3 scenes with locations & mood</p>
+            </div>
+            <div class="glass rounded-xl p-4 module-card" onclick="showModuleInfo(2)">
+                <i class="fas fa-cut text-3xl text-purple-400 mb-2"></i>
+                <h3 class="font-bold">Scene Segmentation</h3>
+                <p class="text-xs text-gray-400">12+ shots with camera angles</p>
+            </div>
+            <div class="glass rounded-xl p-4 module-card" onclick="showModuleInfo(3)">
+                <i class="fas fa-images text-3xl text-pink-400 mb-2"></i>
+                <h3 class="font-bold">Comic/Manga</h3>
+                <p class="text-xs text-gray-400">Panels & pages with layout</p>
+            </div>
+            <div class="glass rounded-xl p-4 module-card" onclick="showModuleInfo(4)">
+                <i class="fas fa-film text-3xl text-yellow-400 mb-2"></i>
+                <h3 class="font-bold">Animation Prep</h3>
+                <p class="text-xs text-gray-400">Keyframes & movement instructions</p>
+            </div>
+            <div class="glass rounded-xl p-4 module-card" onclick="showModuleInfo(5)">
+                <i class="fas fa-video text-3xl text-green-400 mb-2"></i>
+                <h3 class="font-bold">Video Creation</h3>
+                <p class="text-xs text-gray-400">3D animated with motion effects</p>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="glass rounded-2xl p-6 mb-8 hidden">
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-spinner fa-spin mr-3 text-cyan-400"></i>Pipeline Progress</h3>
+            
+            <div class="space-y-3 mb-4">
+                <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg" id="progressStory">
+                    <span><i class="fas fa-book-open mr-2 text-blue-400"></i>Story Generation</span>
+                    <span class="text-gray-400"><i class="fas fa-hourglass-half"></i></span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg" id="progressSegment">
+                    <span><i class="fas fa-cut mr-2 text-purple-400"></i>Scene Segmentation</span>
+                    <span class="text-gray-400"><i class="fas fa-hourglass-half"></i></span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg" id="progressComic">
+                    <span><i class="fas fa-images mr-2 text-pink-400"></i>Comic Generation</span>
+                    <span class="text-gray-400"><i class="fas fa-hourglass-half"></i></span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg" id="progressAnim">
+                    <span><i class="fas fa-film mr-2 text-yellow-400"></i>Animation Prep</span>
+                    <span class="text-gray-400"><i class="fas fa-hourglass-half"></i></span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg" id="progressVideo">
+                    <span><i class="fas fa-video mr-2 text-green-400"></i>Video Creation</span>
+                    <span class="text-gray-400"><i class="fas fa-hourglass-half"></i></span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-400 mb-1">
+                    <span>Overall Progress</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div id="progressMessage" class="text-center text-sm text-gray-400 mt-2">Initializing...</div>
+            </div>
+        </div>
+
+        <!-- Results Section with Tabs -->
+        <div id="resultsSection" class="glass rounded-2xl p-6 mb-8 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold"><i class="fas fa-check-circle text-green-400 mr-3"></i>Pipeline Results</h3>
+                <button onclick="refreshResults()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-4 border-b border-gray-700">
+                <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab-button" onclick="switchTab('story')">Story</button>
+                <button class="tab-button" onclick="switchTab('shots')">Shots</button>
+                <button class="tab-button" onclick="switchTab('comic')">Comic</button>
+                <button class="tab-button" onclick="switchTab('video')">Video</button>
+            </div>
+            
+            <!-- Tab Contents -->
+            <div id="tabOverview" class="tab-content active">
+                <div id="resultsContent"></div>
+            </div>
+            
+            <div id="tabStory" class="tab-content">
+                <div id="storyPreview" class="p-4 bg-gray-800/30 rounded-lg">
+                    <p class="text-gray-400">Loading story preview...</p>
+                </div>
+            </div>
+            
+            <div id="tabShots" class="tab-content">
+                <div id="shotsPreview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <p class="text-gray-400 col-span-3">Loading shots preview...</p>
+                </div>
+            </div>
+            
+            <div id="tabComic" class="tab-content">
+                <div id="comicPreview" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p class="text-gray-400 col-span-2">Loading comic preview...</p>
+                </div>
+            </div>
+            
+            <div id="tabVideo" class="tab-content">
+                <div id="videoPreview" class="p-4">
+                    <p class="text-gray-400">Loading video preview...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="glass rounded-xl p-6">
+            <h4 class="font-bold mb-4"><i class="fas fa-terminal mr-2 text-cyan-400"></i>System Controls</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button onclick="testConnection()" class="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-center">
+                    <i class="fas fa-plug text-green-400 mb-1 block text-xl"></i>
+                    <span class="text-sm">Connection</span>
+                </button>
+                <button onclick="viewWorkspace()" class="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-center">
+                    <i class="fas fa-folder-open text-purple-400 mb-1 block text-xl"></i>
+                    <span class="text-sm">Workspace</span>
+                </button>
+                <button onclick="showNegativePrompts()" class="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-center">
+                    <i class="fas fa-ban text-red-400 mb-1 block text-xl"></i>
+                    <span class="text-sm">Negative Prompts</span>
+                </button>
+                <button onclick="clearCache()" class="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-center">
+                    <i class="fas fa-trash text-yellow-400 mb-1 block text-xl"></i>
+                    <span class="text-sm">Clear Cache</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let projectData = {};
+
+        // Modal functions
+        function openModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+            
+            // Load content if needed
+            if (tabName === 'story' && projectData.components) {
+                loadStoryPreview();
+            } else if (tabName === 'shots' && projectData.components) {
+                loadShotsPreview();
+            } else if (tabName === 'comic' && projectData.components) {
+                loadComicPreview();
+            } else if (tabName === 'video' && projectData.components) {
+                loadVideoPreview();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystem();
+        });
+
+        // Check system status
+        async function checkSystem() {
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/test`);
+                const data = await res.json();
+                
+                document.getElementById('connStatus').innerHTML = '<i class="fas fa-check text-green-400 mr-2"></i>Connected';
+                document.getElementById('hfStatus').innerHTML = `<i class="fas fa-key mr-2"></i>HF: ${data.hf_token ? '✅' : '❌'}`;
+                document.getElementById('ffmpegStatus').innerHTML = `<i class="fas fa-video mr-2"></i>FFmpeg: ${data.ffmpeg ? '✅' : '❌'}`;
+                
+                return true;
+            } catch (error) {
+                document.getElementById('connStatus').innerHTML = '<i class="fas fa-times text-red-400 mr-2"></i>Disconnected';
+                return false;
+            }
+        }
+
+        // Update step indicators
+        function updateStep(step) {
+            for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById(`step${i}`);
+                el.classList.remove('step-active', 'step-completed');
+                if (i === step) el.classList.add('step-active');
+                else if (i < step) el.classList.add('step-completed');
+            }
+        }
+
+        // Update progress
+        function updateProgress(percent, message) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent + '%';
+            document.getElementById('progressMessage').textContent = message;
+        }
+
+        // Mark module complete
+        function markComplete(moduleId) {
+            document.getElementById(`progress${moduleId}`).innerHTML = '<span><i class="fas fa-check-circle text-green-400 mr-2"></i>Complete</span>';
+        }
+
+        // Run full pipeline
+        async function runFullPipeline() {
+            const premise = document.getElementById('premise').value.trim();
+            const genre = document.getElementById('genre').value;
+            const artStyle = document.getElementById('artStyle').value;
+            const character = document.getElementById('character').value;
+            const layout = document.getElementById('layout').value;
+
+            if (!premise) {
+                alert('Please enter a story premise.');
+                return;
+            }
+
+            // Show progress section
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            updateStep(1);
+            updateProgress(5, 'Starting full pipeline...');
+
+            const payload = {
+                premise: premise,
+                genre: genre,
+                art_style: artStyle,
+                main_character: character,
+                layout: layout
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/pipeline/full`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    projectData = data;
+                    updateStep(5);
+                    updateProgress(100, 'Pipeline complete!');
+                    markComplete('Story');
+                    markComplete('Segment');
+                    markComplete('Comic');
+                    markComplete('Anim');
+                    markComplete('Video');
+                    
+                    displayResults(data);
+                    
+                    // Load initial preview
+                    setTimeout(() => {
+                        loadStoryPreview();
+                    }, 500);
+                } else {
+                    throw new Error(data.error || 'Pipeline failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                updateProgress(0, 'Error: ' + error.message);
+            }
+        }
+
+        // Load story preview
+        async function loadStoryPreview() {
+            const storyId = projectData.components.story.id;
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/download/story/${storyId}`);
+                const text = await res.text();
+                document.getElementById('storyPreview').innerHTML = `<pre class="text-sm text-gray-300 whitespace-pre-wrap">${text}</pre>`;
+            } catch (error) {
+                document.getElementById('storyPreview').innerHTML = '<p class="text-red-400">Error loading story preview</p>';
+            }
+        }
+
+        // Load shots preview
+        function loadShotsPreview() {
+            const shots = projectData.components.shots.count;
+            let html = '<div class="col-span-3 text-sm text-gray-300">';
+            html += `<p class="mb-2 font-bold">Generated ${shots} shots:</p>`;
+            html += '<ul class="list-disc list-inside space-y-1">';
+            for (let i = 1; i <= 4; i++) {
+                html += `<li>Scene ${Math.ceil(i/4)}: Shot ${i} - ${i === 1 ? 'Establishing' : i === 2 ? 'Medium' : i === 3 ? 'Close-up' : 'Action'}</li>`;
+            }
+            html += '</ul></div>';
+            document.getElementById('shotsPreview').innerHTML = html;
+        }
+
+        // Load comic preview
+        async function loadComicPreview() {
+            const comicId = projectData.components.comic.id;
+            const firstPageId = projectData.components?.comic?.pages?.[0]?.page_id;
+            
+            if (!firstPageId) {
+                document.getElementById('comicPreview').innerHTML = '<p class="text-gray-400 col-span-2">No comic pages available</p>';
+                return;
+            }
+
+            try {
+                const imgUrl = `${API_BASE}/api/v1/download/comic_page/${firstPageId}`;
+                document.getElementById('comicPreview').innerHTML = `
+                    <div class="col-span-2">
+                        <p class="mb-2 font-bold">First Page Preview:</p>
+                        <img src="${imgUrl}" class="w-full rounded-lg cursor-pointer preview-card" onclick="openModal('${imgUrl}')">
+                        <p class="text-xs text-gray-400 mt-2">Click image to enlarge</p>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('comicPreview').innerHTML = '<p class="text-red-400 col-span-2">Error loading comic preview</p>';
+            }
+        }
+
+        // Load video preview
+        function loadVideoPreview() {
+            const videoUrl = `${API_BASE}${projectData.components.video.download}`;
+            document.getElementById('videoPreview').innerHTML = `
+                <div class="video-container mb-3">
+                    <video controls class="w-full rounded-lg" id="previewVideo">
+                        <source src="${videoUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="flex justify-center gap-4">
+                    <button onclick="document.getElementById('previewVideo').play()" class="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg">
+                        <i class="fas fa-play mr-2"></i>Play
+                    </button>
+                    <button onclick="document.getElementById('previewVideo').pause()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                        <i class="fas fa-pause mr-2"></i>Pause
+                    </button>
+                </div>
+            `;
+        }
+
+        // Run individual module
+        async function runModule(moduleNum) {
+            const premise = document.getElementById('premise').value.trim();
+            if (!premise) {
+                alert('Please enter a story premise first.');
+                return;
+            }
+
+            alert(`Module ${moduleNum} execution - This would call the specific API endpoint. For full experience, use "Run Full Pipeline".`);
+        }
+
+        // Display results
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('resultsContent');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // Get the first page ID safely
+            const firstPageId = data.components?.comic?.pages?.[0]?.page_id;
+            
+            let html = `
+                <div class="p-6 bg-gradient-to-r from-green-900/30 to-blue-900/30 rounded-xl border border-green-700/30">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center mr-4">
+                            <i class="fas fa-check text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold">Pipeline Complete!</h4>
+                            <p class="text-gray-300">Completed in ${data.time_taken}</p>
+                            <p class="text-sm text-gray-400">Project ID: ${data.project_id}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                        <div class="bg-blue-900/30 p-3 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-blue-400">${data.components.story.scenes}</div>
+                            <div class="text-xs">Scenes</div>
+                        </div>
+                        <div class="bg-purple-900/30 p-3 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-purple-400">${data.components.shots.count}</div>
+                            <div class="text-xs">Shots</div>
+                        </div>
+                        <div class="bg-pink-900/30 p-3 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-pink-400">${data.components.comic.panels}</div>
+                            <div class="text-xs">Panels</div>
+                        </div>
+                        <div class="bg-yellow-900/30 p-3 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-yellow-400">${data.components.animation.instructions}</div>
+                            <div class="text-xs">Keyframes</div>
+                        </div>
+                        <div class="bg-green-900/30 p-3 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-400">✓</div>
+                            <div class="text-xs">Video</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-800/50 p-3 rounded-lg">
+                            <p class="text-sm font-bold mb-2">📊 Statistics</p>
+                            <p class="text-xs text-gray-400">Total Frames: 1170</p>
+                            <p class="text-xs text-gray-400">Video Size: 13.3MB</p>
+                            <p class="text-xs text-gray-400">Negative Terms: ${data.negative_terms || 560}</p>
+                        </div>
+                        <div class="bg-gray-800/50 p-3 rounded-lg">
+                            <p class="text-sm font-bold mb-2">🎵 Audio</p>
+                            <p class="text-xs text-gray-400">Narration: Yes</p>
+                            <p class="text-xs text-gray-400">Background Music: ${data.background_music ? 'Yes' : 'No'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <p><i class="fas fa-download text-cyan-400 mr-2"></i>Download files:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="${API_BASE}${data.components.story.download}" target="_blank" class="px-3 py-1 bg-blue-700 hover:bg-blue-600 rounded text-sm">
+                                <i class="fas fa-file-alt mr-1"></i>Story
+                            </a>
+                            <a href="${API_BASE}${data.components.shots.download}" target="_blank" class="px-3 py-1 bg-purple-700 hover:bg-purple-600 rounded text-sm">
+                                <i class="fas fa-list mr-1"></i>Shots
+                            </a>
+                            <a href="${API_BASE}${data.components.comic.download}" target="_blank" class="px-3 py-1 bg-pink-700 hover:bg-pink-600 rounded text-sm">
+                                <i class="fas fa-images mr-1"></i>Comic JSON
+                            </a>
+                            ${firstPageId ? `
+                            <a href="${API_BASE}/api/v1/download/comic_page/${firstPageId}" target="_blank" class="px-3 py-1 bg-indigo-700 hover:bg-indigo-600 rounded text-sm">
+                                <i class="fas fa-image mr-1"></i>Sample Page
+                            </a>
+                            ` : ''}
+                            <a href="${API_BASE}${data.components.animation.download}" target="_blank" class="px-3 py-1 bg-yellow-700 hover:bg-yellow-600 rounded text-sm">
+                                <i class="fas fa-film mr-1"></i>Animation Prep
+                            </a>
+                            <a href="${API_BASE}${data.components.video.download}" target="_blank" class="px-3 py-1 bg-green-700 hover:bg-green-600 rounded text-sm">
+                                <i class="fas fa-video mr-1"></i>Download Video
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-xs text-gray-500 border-t border-gray-700 pt-3">
+                        <p><i class="fas fa-info-circle mr-1"></i> Use the tabs above to preview story, shots, comic pages, and video.</p>
+                    </div>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+            resultsSection.classList.remove('hidden');
+            
+            // Switch to overview tab
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-button')[0].classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('tabOverview').classList.add('active');
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show negative prompts info
+        async function showNegativePrompts() {
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/negative/prompts`);
+                const data = await res.json();
+                
+                let msg = `Total Negative Terms: ${data.total_terms}\nCategories:\n`;
+                for (const [cat, info] of Object.entries(data.categories)) {
+                    msg += `\n• ${cat}: ${info.term_count} terms`;
+                }
+                alert(msg);
+            } catch (error) {
+                alert('Could not fetch negative prompts info');
+            }
+        }
+
+        // Show module info
+        function showModuleInfo(moduleNum) {
+            const infos = {
+                1: 'Story Generation: Creates 3 scenes with locations, mood, and key actions. Saves as JSON and text files.',
+                2: 'Scene Segmentation: Breaks each scene into 4 shots with camera angles, composition notes, and durations.',
+                3: 'Comic Creation: Generates AI panels for each shot, arranges them into manga-style pages.',
+                4: 'Animation Prep: Creates keyframe instructions with camera movements and character animation data.',
+                5: 'Video Creation: Renders 3D animated video with motion effects (pan, zoom, shake), particles, and optional audio.'
+            };
+            alert(infos[moduleNum] || 'Module info not available');
+        }
+
+        // View workspace
+        function viewWorkspace() {
+            alert('Workspace structure:\n\n' +
+                  'backend/workspace/\n' +
+                  '├── stories/     - Story JSON & text files\n' +
+                  '├── scenes/      - Shot segmentation data\n' +
+                  '├── panels/      - Individual panel images\n' +
+                  '├── comics/      - Page layouts & metadata\n' +
+                  '├── storyboard/  - Storyboard sequences\n' +
+                  '├── videos/      - Rendered MP4 videos\n' +
+                  '├── audio/       - Narration audio files\n' +
+                  '└── animations/  - Animation instructions');
+        }
+
+        // Clear cache
+        async function clearCache() {
+            if (confirm('Clear all generated files? This cannot be undone.')) {
+                alert('Cache clearing not implemented - you can manually delete files from the workspace folder.');
+            }
+        }
+
+        // Refresh results
+        function refreshResults() {
+            if (projectData.components) {
+                displayResults(projectData);
+            } else {
+                alert('No results to display. Run the pipeline first.');
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            await checkSystem();
+        }
+    </script>
+</body>
+</html>

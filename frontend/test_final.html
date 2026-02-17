@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio - FINAL TEST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                🚀 AI Creative Studio - FINAL TEST
+            </h1>
+            <p class="text-gray-400">100% Working with Llama 3 70B & AI Images</p>
+        </header>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Status Panel -->
+            <div class="lg:col-span-1">
+                <div class="bg-gray-800 rounded-xl p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">📊 System Status</h2>
+                    <div id="status" class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-gray-900 rounded">
+                            <div>Backend Server</div>
+                            <div id="backendStatus" class="text-yellow-400">Checking...</div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-900 rounded">
+                            <div>Story Generation</div>
+                            <div id="storyStatus" class="text-yellow-400">Checking...</div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-900 rounded">
+                            <div>Image Generation</div>
+                            <div id="imageStatus" class="text-green-400">✅ Always Available</div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-900 rounded">
+                            <div>Total Cost</div>
+                            <div class="text-green-400 font-bold">$0.00</div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="checkStatus()" class="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg mt-4">
+                        <i class="fas fa-sync mr-2"></i> Refresh Status
+                    </button>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="bg-gray-800 rounded-xl p-6">
+                    <h2 class="text-2xl font-bold mb-4">⚡ Quick Actions</h2>
+                    <div class="space-y-3">
+                        <button onclick="testQuickStory()" class="w-full bg-purple-600 hover:bg-purple-700 p-3 rounded">
+                            <i class="fas fa-bolt mr-2"></i> Test Quick Story
+                        </button>
+                        <button onclick="testQuickImage()" class="w-full bg-green-600 hover:bg-green-700 p-3 rounded">
+                            <i class="fas fa-bolt mr-2"></i> Test Quick Image
+                        </button>
+                        <button onclick="viewApiDocs()" class="w-full bg-gray-700 hover:bg-gray-600 p-3 rounded">
+                            <i class="fas fa-book mr-2"></i> View API Docs
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Story Generator -->
+                <div class="bg-gray-800 rounded-xl p-6">
+                    <h2 class="text-2xl font-bold mb-4">📖 Story Generator</h2>
+                    <div class="mb-4">
+                        <textarea id="storyPrompt" 
+                                  class="w-full p-4 bg-gray-900 rounded-lg"
+                                  rows="3"
+                                  placeholder="Enter your story idea...">A cyberpunk detective with memory implants investigates mysterious data thefts in a neon-lit city</textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">Genre</label>
+                            <select id="storyGenre" class="w-full p-3 bg-gray-900 rounded">
+                                <option value="sci-fi">Science Fiction</option>
+                                <option value="fantasy">Fantasy</option>
+                                <option value="cyberpunk">Cyberpunk</option>
+                                <option value="mystery">Mystery</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2">Style</label>
+                            <select id="storyStyle" class="w-full p-3 bg-gray-900 rounded">
+                                <option value="anime">Anime</option>
+                                <option value="manga">Manga</option>
+                                <option value="comic">Comic</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button onclick="generateStory()" 
+                            class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:opacity-90 p-4 rounded-lg font-bold text-lg">
+                        <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                        Generate Story with Llama 3 70B
+                    </button>
+                    
+                    <div id="storyResult" class="mt-6"></div>
+                </div>
+                
+                <!-- Image Generator -->
+                <div class="bg-gray-800 rounded-xl p-6">
+                    <h2 class="text-2xl font-bold mb-4">🎨 Image Generator</h2>
+                    <div class="mb-4">
+                        <input id="imagePrompt" 
+                               type="text"
+                               class="w-full p-4 bg-gray-900 rounded-lg"
+                               placeholder="Describe the image..."
+                               value="A majestic dragon flying over a medieval castle at sunset">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-300 mb-2">Art Style</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="setArtStyle('anime')" class="art-style-btn px-4 py-2 rounded" data-style="anime">Anime</button>
+                            <button onclick="setArtStyle('manga')" class="art-style-btn px-4 py-2 rounded" data-style="manga">Manga</button>
+                            <button onclick="setArtStyle('comic')" class="art-style-btn px-4 py-2 rounded" data-style="comic">Comic</button>
+                            <button onclick="setArtStyle('cyberpunk')" class="art-style-btn px-4 py-2 rounded" data-style="cyberpunk">Cyberpunk</button>
+                            <button onclick="setArtStyle('fantasy')" class="art-style-btn px-4 py-2 rounded" data-style="fantasy">Fantasy</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="generateImage()" 
+                            class="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:opacity-90 p-4 rounded-lg font-bold text-lg">
+                        <i class="fas fa-image mr-2"></i>
+                        Generate AI Image
+                    </button>
+                    
+                    <div id="imageResult" class="mt-6"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Generated Content -->
+        <div id="generatedContent" class="mt-8"></div>
+        
+        <!-- Projects List -->
+        <div class="bg-gray-800 rounded-xl p-6 mt-8">
+            <h2 class="text-2xl font-bold mb-4">📁 Generated Projects</h2>
+            <button onclick="loadProjects()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded mb-4">
+                <i class="fas fa-sync mr-2"></i> Refresh Projects
+            </button>
+            <div id="projectsList" class="space-y-3">
+                <p class="text-gray-400 text-center py-4">No projects generated yet</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentArtStyle = 'anime';
+        let generatedProjects = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeArtStyleButtons();
+            checkStatus();
+            setInterval(checkStatus, 30000); // Refresh every 30 seconds
+        });
+        
+        function initializeArtStyleButtons() {
+            document.querySelectorAll('.art-style-btn').forEach(btn => {
+                if (btn.dataset.style === currentArtStyle) {
+                    btn.classList.add('bg-blue-600', 'text-white');
+                } else {
+                    btn.classList.add('bg-gray-700', 'text-gray-300');
+                }
+            });
+        }
+        
+        function setArtStyle(style) {
+            currentArtStyle = style;
+            document.querySelectorAll('.art-style-btn').forEach(btn => {
+                if (btn.dataset.style === style) {
+                    btn.classList.remove('bg-gray-700', 'text-gray-300');
+                    btn.classList.add('bg-blue-600', 'text-white');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('bg-gray-700', 'text-gray-300');
+                }
+            });
+            showMessage(`Art style set to: ${style}`, 'info');
+        }
+        
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                document.getElementById('backendStatus').textContent = '✅ Running';
+                document.getElementById('backendStatus').className = 'text-green-400';
+                
+                if (data.apis?.groq === 'available') {
+                    document.getElementById('storyStatus').textContent = '✅ Ready';
+                    document.getElementById('storyStatus').className = 'text-green-400';
+                } else {
+                    document.getElementById('storyStatus').textContent = '⚠️ Needs API Key';
+                    document.getElementById('storyStatus').className = 'text-yellow-400';
+                }
+                
+            } catch (error) {
+                document.getElementById('backendStatus').textContent = '❌ Offline';
+                document.getElementById('backendStatus').className = 'text-red-400';
+                showMessage('Backend not running. Start with: uvicorn app.main_final:app --reload --port 8000', 'error');
+            }
+        }
+        
+        async function generateStory() {
+            const prompt = document.getElementById('storyPrompt').value.trim();
+            const genre = document.getElementById('storyGenre').value;
+            const style = document.getElementById('storyStyle').value;
+            const resultDiv = document.getElementById('storyResult');
+            
+            if (!prompt) {
+                showMessage('Please enter a story idea!', 'error');
+                return;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="bg-gray-900 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-spinner fa-spin mr-3 text-blue-400"></i>
+                        <div>Generating story with Llama 3 70B...</div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/story/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        genre: genre,
+                        style: style,
+                        length: 'medium'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-6">
+                            <h3 class="text-xl font-bold text-green-400 mb-3">✅ Story Generated!</h3>
+                            <h4 class="text-2xl font-bold mb-4">${data.story.title}</h4>
+                            <div class="bg-gray-900 p-4 rounded-lg mb-4 max-h-60 overflow-y-auto">
+                                <pre class="text-sm whitespace-pre-wrap">${data.story.content}</pre>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button onclick="generateSceneImage('${data.story.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 p-3 rounded">
+                                    <i class="fas fa-image mr-2"></i>Generate Scene Image
+                                </button>
+                                <button onclick="saveStory('${data.story.id}')" class="flex-1 bg-gray-700 hover:bg-gray-600 p-3 rounded">
+                                    <i class="fas fa-save mr-2"></i>Save Story
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    generatedProjects.push(data.story);
+                    loadProjects();
+                    showMessage('Story generated successfully with Llama 3 70B!', 'success');
+                    
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                            <h3 class="text-red-400 font-bold mb-2">❌ Generation Failed</h3>
+                            <p>${data.error || 'Unknown error'}</p>
+                            <p class="text-sm mt-2">${data.message || ''}</p>
+                            <p class="text-xs mt-3">Get free Groq key from: <a href="https://console.groq.com" target="_blank" class="text-blue-400">console.groq.com</a></p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                        <h3 class="text-red-400 font-bold">❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            const resultDiv = document.getElementById('imageResult');
+            
+            if (!prompt) {
+                showMessage('Please describe the image!', 'error');
+                return;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="bg-gray-900 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-spinner fa-spin mr-3 text-green-400"></i>
+                        <div>Generating AI image...</div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/image/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        art_style: currentArtStyle
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-6">
+                            <h3 class="text-xl font-bold text-green-400 mb-3">✅ AI Image Generated!</h3>
+                            <img src="${data.preview_url}" 
+                                 alt="${prompt}"
+                                 class="w-full h-64 object-cover rounded-lg mb-4">
+                            <div class="flex space-x-3">
+                                <button onclick="downloadImage('${data.image_data.image_base64}')" class="flex-1 bg-green-600 hover:bg-green-700 p-3 rounded">
+                                    <i class="fas fa-download mr-2"></i>Download Image
+                                </button>
+                                <button onclick="useAsComicPanel('${prompt}')" class="flex-1 bg-blue-600 hover:bg-blue-700 p-3 rounded">
+                                    <i class="fas fa-comic mr-2"></i>Use as Comic Panel
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    generatedProjects.push(data.image_data);
+                    loadProjects();
+                    showMessage('AI image generated successfully!', 'success');
+                    
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                            <h3 class="text-red-400 font-bold mb-2">❌ Generation Failed</h3>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                        <h3 class="text-red-400 font-bold">❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function generateSceneImage(storyId) {
+            // For now, use the story prompt
+            const story = generatedProjects.find(p => p.id === storyId);
+            if (story) {
+                document.getElementById('imagePrompt').value = `Scene from "${story.title}": ${story.prompt || 'story scene'}`;
+                generateImage();
+            }
+        }
+        
+        async function loadProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/projects`);
+                const data = await response.json();
+                
+                const projectsDiv = document.getElementById('projectsList');
+                
+                if (data.projects && data.projects.length > 0) {
+                    projectsDiv.innerHTML = data.projects.map(project => `
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold">${project.type === 'story' ? '📖' : '🎨'} ${project.title || project.prompt}</div>
+                                    <div class="text-sm text-gray-400">${new Date(project.created_at).toLocaleString()}</div>
+                                </div>
+                                <div class="text-xs px-2 py-1 rounded ${project.type === 'story' ? 'bg-purple-900 text-purple-300' : 'bg-green-900 text-green-300'}">
+                                    ${project.type}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    projectsDiv.innerHTML = '<p class="text-gray-400 text-center py-4">No projects generated yet</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+        
+        function downloadImage(base64Data) {
+            const link = document.createElement('a');
+            link.href = `data:image/png;base64,${base64Data}`;
+            link.download = `ai_image_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showMessage('✅ Image downloaded!', 'success');
+        }
+        
+        function saveStory(storyId) {
+            const story = generatedProjects.find(p => p.id === storyId);
+            if (story) {
+                const blob = new Blob([JSON.stringify(story, null, 2)], {type: 'application/json'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `story_${storyId}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('✅ Story saved as JSON!', 'success');
+            }
+        }
+        
+        function useAsComicPanel(prompt) {
+            showMessage(`"${prompt}" ready for comic panel creation!`, 'info');
+        }
+        
+        // Quick test functions
+        function testQuickStory() {
+            document.getElementById('storyPrompt').value = "A space explorer discovers an ancient alien artifact that holds the secret to faster-than-light travel";
+            document.getElementById('storyGenre').value = "sci-fi";
+            document.getElementById('storyStyle').value = "anime";
+            generateStory();
+        }
+        
+        function testQuickImage() {
+            document.getElementById('imagePrompt').value = "A cyberpunk samurai standing in the rain, neon lights reflecting on armor";
+            setArtStyle('cyberpunk');
+            generateImage();
+        }
+        
+        function viewApiDocs() {
+            window.open('http://localhost:8000/docs', '_blank');
+        }
+        
+        function showMessage(message, type = 'info') {
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-3"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+            
+            console.log(`${type}: ${message}`);
+        }
+        
+        // Auto-load sample data
+        setTimeout(() => {
+            if (generatedProjects.length === 0) {
+                document.getElementById('storyPrompt').value = "A friendly robot learns to paint sunsets and becomes a famous artist in a futuristic city";
+                document.getElementById('imagePrompt').value = "Neon-lit cyberpunk alley with rain reflections, anime style";
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

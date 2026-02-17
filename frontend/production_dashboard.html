@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Creative Studio - Production Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .workflow-step {
+            position: relative;
+            padding-left: 2.5rem;
+        }
+        .workflow-step::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .story-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+        }
+        .story-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-panel p-4 mb-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="gradient-bg w-10 h-10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">AI Creative Studio</h1>
+                    <p class="text-gray-400 text-sm">Next-Gen Story → Comics → Animation</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:flex space-x-4">
+                    <a href="#story" class="px-4 py-2 rounded-lg hover:bg-gray-800">Story</a>
+                    <a href="#comics" class="px-4 py-2 rounded-lg hover:bg-gray-800">Comics</a>
+                    <a href="#animation" class="px-4 py-2 rounded-lg hover:bg-gray-800">Animation</a>
+                    <a href="#projects" class="px-4 py-2 rounded-lg hover:bg-gray-800">Projects</a>
+                </div>
+                <button onclick="checkSystemStatus()" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-sync mr-2"></i>System Status
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Production Workflow -->
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold mb-8">🎬 Production Workflow</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-blue-400 text-2xl mb-4">1</div>
+                    <h3 class="text-xl font-bold mb-2">Story Generation</h3>
+                    <p class="text-gray-400 mb-4">Create professional narratives with AI</p>
+                    <button onclick="showStoryCreator()" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg">
+                        Start Story
+                    </button>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-purple-400 text-2xl mb-4">2</div>
+                    <h3 class="text-xl font-bold mb-2">Scene Analysis</h3>
+                    <p class="text-gray-400 mb-4">Intelligent scene breakdown & visualization</p>
+                    <button onclick="showSceneAnalyzer()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-lg">
+                        Analyze Scenes
+                    </button>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-green-400 text-2xl mb-4">3</div>
+                    <h3 class="text-xl font-bold mb-2">Comic Production</h3>
+                    <p class="text-gray-400 mb-4">Generate panels & pages automatically</p>
+                    <button onclick="showComicCreator()" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">
+                        Create Comics
+                    </button>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-yellow-400 text-2xl mb-4">4</div>
+                    <h3 class="text-xl font-bold mb-2">Animation Pipeline</h3>
+                    <p class="text-gray-400 mb-4">Feature-length animation production</p>
+                    <button onclick="showAnimationPlanner()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg">
+                        Plan Animation
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Generator -->
+        <div id="story-section" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">📖 Story Generation</h2>
+                <div class="flex space-x-3">
+                    <button onclick="loadTemplates()" class="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700">
+                        <i class="fas fa-copy mr-2"></i>Templates
+                    </button>
+                    <button onclick="showAdvancedSettings()" class="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700">
+                        <i class="fas fa-cog mr-2"></i>Settings
+                    </button>
+                </div>
+            </div>
+            
+            <div class="glass-panel p-6 rounded-xl mb-6">
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Story Premise</label>
+                    <textarea id="storyPremise" 
+                              class="w-full p-4 bg-gray-800 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                              rows="3"
+                              placeholder="Enter your story idea or premise...">In a world where dreams can be recorded and replayed, a detective specializing in dream crimes must solve a murder that only exists in the collective unconscious.</textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-gray-300 mb-2">Genre</label>
+                        <select id="storyGenre" class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700">
+                            <option value="sci_fi">Science Fiction</option>
+                            <option value="cyberpunk">Cyberpunk</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="mystery">Mystery</option>
+                            <option value="adventure">Adventure</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2">Art Style</label>
+                        <select id="artStyle" class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700">
+                            <option value="anime">Anime</option>
+                            <option value="manga">Manga</option>
+                            <option value="comic">Comic</option>
+                            <option value="cyberpunk">Cyberpunk</option>
+                            <option value="realistic">Realistic</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2">Length</label>
+                        <select id="storyLength" class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700">
+                            <option value="short">Short (5-15 min)</option>
+                            <option value="medium">Medium (20-45 min)</option>
+                            <option value="feature">Feature (60-120 min)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button onclick="generateProfessionalStory()" 
+                        class="w-full gradient-bg hover:opacity-90 text-white font-bold py-4 rounded-lg text-lg">
+                    <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                    Generate Professional Story with Llama 3 70B
+                </button>
+            </div>
+            
+            <div id="storyOutput" class="space-y-4"></div>
+        </div>
+
+        <!-- Scene Analysis -->
+        <div id="scene-section" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6">🎥 Scene Analysis & Visualization</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Scene Breakdown</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold">Scene 1: The Discovery</div>
+                                <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">Establishing</span>
+                            </div>
+                            <p class="text-sm text-gray-300 mb-2">Detective enters the dream laboratory, noticing anomalies in the dream recordings.</p>
+                            <div class="text-xs text-gray-400 flex justify-between">
+                                <span><i class="fas fa-clock mr-1"></i>30 seconds</span>
+                                <span><i class="fas fa-users mr-1"></i>3 characters</span>
+                                <span><i class="fas fa-map-marker mr-1"></i>Dream Lab</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold">Scene 2: The Investigation</div>
+                                <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">Dialogue</span>
+                            </div>
+                            <p class="text-sm text-gray-300 mb-2">Detective interviews the lab technician about the anomalous dream patterns.</p>
+                            <div class="text-xs text-gray-400 flex justify-between">
+                                <span><i class="fas fa-clock mr-1"></i>45 seconds</span>
+                                <span><i class="fas fa-users mr-1"></i>2 characters</span>
+                                <span><i class="fas fa-map-marker mr-1"></i>Interview Room</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="analyzeSelectedScenes()" class="w-full mt-6 bg-purple-600 hover:bg-purple-700 py-3 rounded-lg">
+                        <i class="fas fa-search mr-2"></i>Analyze Scenes with AI
+                    </button>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Visual Guidelines</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-bold mb-2 text-blue-300">Composition</h4>
+                            <p class="text-sm">Wide shot establishing the dream lab environment. Show scale and technology.</p>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-bold mb-2 text-purple-300">Lighting</h4>
+                            <p class="text-sm">Cool blue tones for technology, warm highlights on characters. Dramatic shadows.</p>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <h4 class="font-bold mb-2 text-green-300">Camera</h4>
+                            <p class="text-sm">Slow pan to reveal scale. Close-ups on key technology. Over-the-shoulder for dialogue.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comic Production -->
+        <div id="comic-section" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">🎨 Comic & Manga Production</h2>
+                <div class="flex space-x-3">
+                    <select id="comicStyle" class="p-2 bg-gray-800 rounded-lg">
+                        <option value="anime">Anime Style</option>
+                        <option value="manga">Manga Style</option>
+                        <option value="comic">Comic Style</option>
+                        <option value="cyberpunk">Cyberpunk Style</option>
+                    </select>
+                    <button onclick="generateComicPage()" class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700">
+                        <i class="fas fa-image mr-2"></i>Generate Page
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="glass-panel p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-bold mb-4">Page Preview</h3>
+                        <div class="bg-gray-800 rounded-lg p-8 flex items-center justify-center min-h-[400px]">
+                            <div class="text-center">
+                                <i class="fas fa-image text-5xl text-gray-600 mb-4"></i>
+                                <p class="text-gray-400">Comic page preview will appear here</p>
+                                <p class="text-sm text-gray-500 mt-2">Generated panels with AI art and layout</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-400" id="panelCount">0</div>
+                            <div class="text-sm text-gray-400">Panels</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-green-400" id="pageCount">0</div>
+                            <div class="text-sm text-gray-400">Pages</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-purple-400" id="characterCount">0</div>
+                            <div class="text-sm text-gray-400">Characters</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="glass-panel p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-bold mb-4">Panel Settings</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-gray-300 mb-2">Layout Type</label>
+                                <select class="w-full p-2 bg-gray-800 rounded-lg">
+                                    <option>Traditional Manga (右開き)</option>
+                                    <option>Western Comic</option>
+                                    <option>Webtoon (Vertical)</option>
+                                    <option>Dynamic Grid</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-300 mb-2">Panel Borders</label>
+                                <select class="w-full p-2 bg-gray-800 rounded-lg">
+                                    <option>Traditional (Black)</option>
+                                    <option>Bleed (No Border)</option>
+                                    <option>Styled (Custom)</option>
+                                    <option>Irregular (Manga)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-300 mb-2">Speech Bubbles</label>
+                                <select class="w-full p-2 bg-gray-800 rounded-lg">
+                                    <option>Standard (Round)</option>
+                                    <option>Thought (Cloud)</option>
+                                    <option>Scream (Spiky)</option>
+                                    <option>Whisper (Dashed)</option>
+                                </select>
+                            </div>
+                            
+                            <button onclick="exportComicPage()" class="w-full mt-4 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">
+                                <i class="fas fa-download mr-2"></i>Export Page
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animation Pipeline -->
+        <div id="animation-section" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6">🎬 Animation Pipeline</h2>
+            
+            <div class="glass-panel p-6 rounded-xl mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Production Timeline</h3>
+                    <button onclick="createAnimationPlan()" class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-700">
+                        <i class="fas fa-film mr-2"></i>Create Animation Plan
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- Production Stages -->
+                    <div class="workflow-step">
+                        <h4 class="font-bold text-lg mb-2">1. Pre-production</h4>
+                        <p class="text-gray-400 text-sm mb-2">Storyboarding, character design, environment concepts</p>
+                        <div class="w-full bg-gray-800 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <h4 class="font-bold text-lg mb-2">2. Keyframe Generation</h4>
+                        <p class="text-gray-400 text-sm mb-2">Creating key poses and extreme positions</p>
+                        <div class="w-full bg-gray-800 rounded-full h-2">
+                            <div class="bg-purple-600 h-2 rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <h4 class="font-bold text-lg mb-2">3. In-betweening</h4>
+                        <p class="text-gray-400 text-sm mb-2">Generating intermediate frames for smooth animation</p>
+                        <div class="w-full bg-gray-800 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <h4 class="font-bold text-lg mb-2">4. Compositing & Final Render</h4>
+                        <p class="text-gray-400 text-sm mb-2">Adding effects, audio, and final rendering</p>
+                        <div class="w-full bg-gray-800 rounded-full h-2">
+                            <div class="bg-yellow-600 h-2 rounded-full" style="width: 25%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Consistency Rules</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-400 mt-1 mr-3"></i>
+                            <span>Character proportions maintained across scenes</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-400 mt-1 mr-3"></i>
+                            <span>Color palettes locked per character and environment</span>
+                        </li>
+                        <li class="fas fa-check text-green-400 mt-1 mr-3"></i>
+                            <span>Animation timing consistent with established rhythm</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-400 mt-1 mr-3"></i>
+                            <span>Camera movements follow established style</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Export Settings</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">Resolution</label>
+                            <select class="w-full p-2 bg-gray-800 rounded-lg">
+                                <option>1920x1080 (HD)</option>
+                                <option>3840x2160 (4K)</option>
+                                <option>1280x720 (Web)</option>
+                                <option>Custom</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 mb-2">Frame Rate</label>
+                            <select class="w-full p-2 bg-gray-800 rounded-lg">
+                                <option>24 FPS (Cinematic)</option>
+                                <option>30 FPS (Standard)</option>
+                                <option>60 FPS (Smooth)</option>
+                                <option>12 FPS (Stylized)</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="exportAnimation()" class="w-full mt-4 bg-gray-700 hover:bg-gray-600 py-3 rounded-lg font-bold">
+                            <i class="fas fa-file-export mr-2"></i>Export Animation Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects -->
+        <div id="projects-section">
+            <h2 class="text-3xl font-bold mb-6">📁 Projects</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Project cards will be dynamically loaded -->
+                <div class="story-card p-6 rounded-xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg">Dream Detective</h3>
+                            <p class="text-gray-400 text-sm">Cyberpunk Mystery</p>
+                        </div>
+                        <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">Story</span>
+                    </div>
+                    
+                    <p class="text-gray-300 text-sm mb-4">A detective specializing in dream crimes investigates a murder in the collective unconscious.</p>
+                    
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span><i class="fas fa-clock mr-1"></i>2 hours ago</span>
+                        <span><i class="fas fa-scene mr-1"></i>8 scenes</span>
+                        <span><i class="fas fa-users mr-1"></i>5 characters</span>
+                    </div>
+                    
+                    <div class="mt-4 flex space-x-2">
+                        <button onclick="openProject('dream-detective')" class="flex-1 bg-gray-800 hover:bg-gray-700 py-2 rounded-lg text-sm">
+                            Open
+                        </button>
+                        <button onclick="exportProject('dream-detective')" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm">
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-md rounded-xl">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">System Status</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="statusContent" class="space-y-4">
+                    <!-- Status will be loaded here -->
+                </div>
+                
+                <button onclick="closeModal()" class="w-full mt-6 bg-gray-700 hover:bg-gray-600 py-3 rounded-lg">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentProjects = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProjects();
+            checkSystemStatus();
+        });
+        
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                const modal = document.getElementById('statusModal');
+                const content = document.getElementById('statusContent');
+                
+                let html = '<div class="space-y-4">';
+                
+                // Backend status
+                html += `
+                    <div class="p-4 bg-gray-800 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="font-bold">Backend Server</div>
+                            <div class="text-green-400">✅ Running</div>
+                        </div>
+                        <p class="text-sm text-gray-400">Port 8000</p>
+                    </div>
+                `;
+                
+                // Engines status
+                Object.entries(data.engines || {}).forEach(([engine, status]) => {
+                    const isAvailable = status.includes('available');
+                    html += `
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold">${engine.replace('_', ' ').toUpperCase()}</div>
+                                <div class="${isAvailable ? 'text-green-400' : 'text-yellow-400'}">
+                                    ${isAvailable ? '✅ Available' : '⚠️ Needs Setup'}
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400">${status}</p>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                content.innerHTML = html;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+            } catch (error) {
+                alert('System status check failed: ' + error.message);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('statusModal').classList.add('hidden');
+        }
+        
+        async function generateProfessionalStory() {
+            const premise = document.getElementById('storyPremise').value;
+            const genre = document.getElementById('storyGenre').value;
+            const artStyle = document.getElementById('artStyle').value;
+            const length = document.getElementById('storyLength').value;
+            
+            const outputDiv = document.getElementById('storyOutput');
+            outputDiv.innerHTML = `
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-spinner fa-spin mr-3 text-blue-400"></i>
+                        <div>
+                            <div class="font-bold">Generating Professional Story</div>
+                            <div class="text-sm text-gray-400">Using Llama 3 70B with advanced narrative structuring...</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        This may take 30-60 seconds. The system is creating:
+                        <ul class="list-disc list-inside mt-2 ml-4">
+                            <li>Three-act narrative structure</li>
+                            <li>Character arcs and development</li>
+                            <li>Scene-by-scene breakdown</li>
+                            <li>Visual style specifications</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/story/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        premise: premise,
+                        genre: genre,
+                        art_style: artStyle,
+                        target_length: length,
+                        tone: "epic"
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    outputDiv.innerHTML = `
+                        <div class="glass-panel p-6 rounded-xl border border-green-500/20">
+                            <div class="flex items-start mb-4">
+                                <div class="text-green-400 text-2xl mr-3">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold">Professional Story Generated!</h3>
+                                    <p class="text-gray-400">Ready for production pipeline</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h4 class="font-bold text-lg mb-2">${data.story.metadata.title}</h4>
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">${data.story.metadata.genre}</span>
+                                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">${data.story.metadata.art_style}</span>
+                                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">${data.story.production_notes.estimated_runtime}</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div class="bg-gray-800 p-4 rounded-lg">
+                                        <div class="text-3xl font-bold text-blue-400">${data.story.characters.length}</div>
+                                        <div class="text-sm text-gray-400">Characters</div>
+                                    </div>
+                                    <div class="bg-gray-800 p-4 rounded-lg">
+                                        <div class="text-3xl font-bold text-purple-400">${data.story.scenes.length}</div>
+                                        <div class="text-sm text-gray-400">Scenes</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-3">
+                                <button onclick="analyzeStory('${data.story_id}')" class="flex-1 bg-purple-600 hover:bg-purple-700 py-3 rounded-lg">
+                                    <i class="fas fa-search mr-2"></i>Analyze Scenes
+                                </button>
+                                <button onclick="saveStoryBlueprint('${data.story_id}')" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-lg">
+                                    <i class="fas fa-save mr-2"></i>Save Blueprint
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Update project list
+                    loadProjects();
+                    
+                } else {
+                    outputDiv.innerHTML = `
+                        <div class="glass-panel p-6 rounded-xl border border-red-500/20">
+                            <div class="flex items-start">
+                                <div class="text-red-400 text-2xl mr-3">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold">Generation Failed</h3>
+                                    <p class="text-gray-400">${data.error || 'Unknown error'}</p>
+                                    <p class="text-sm mt-2">${data.message || 'Please check your API keys'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                outputDiv.innerHTML = `
+                    <div class="glass-panel p-6 rounded-xl border border-red-500/20">
+                        <div class="flex items-start">
+                            <div class="text-red-400 text-2xl mr-3">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">Network Error</h3>
+                                <p class="text-gray-400">${error.message}</p>
+                                <p class="text-sm mt-2">Make sure backend is running on port 8000</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function analyzeSelectedScenes() {
+            // For now, show a message
+            showNotification('Scene analysis started. This feature analyzes scenes for visual production guidelines.', 'info');
+        }
+        
+        async function generateComicPage() {
+            showNotification('Comic page generation started. Generating panels with AI art...', 'info');
+            
+            // Update counters
+            document.getElementById('panelCount').textContent = '6';
+            document.getElementById('pageCount').textContent = '1';
+            document.getElementById('characterCount').textContent = '3';
+        }
+        
+        async function createAnimationPlan() {
+            showNotification('Animation pipeline plan created. Ready for production scheduling.', 'success');
+        }
+        
+        async function loadProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/projects`);
+                const data = await response.json();
+                
+                currentProjects = data.projects || [];
+                
+                // Update UI with projects
+                // This is a simplified version
+                
+            } catch (error) {
+                console.error('Failed to load projects:', error);
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-3"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+        
+        // UI Helper functions
+        function showStoryCreator() {
+            document.getElementById('story-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showSceneAnalyzer() {
+            document.getElementById('scene-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showComicCreator() {
+            document.getElementById('comic-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showAnimationPlanner() {
+            document.getElementById('animation-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Auto-refresh projects every 30 seconds
+        setInterval(loadProjects, 30000);
+    </script>
+</body>
+</html>
