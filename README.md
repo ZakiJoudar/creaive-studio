@@ -97,11 +97,7 @@ https://github.com/user-attachments/assets/your-demo-video-link
    pip install -r requirements.txt
    ```
 
-4. **Set up environment variables**
-   Create a `.env` file in the backend directory:
-   ```env
-   HUGGINGFACE_TOKEN=your_token_here
-   ```
+
 
 5. **Install FFmpeg**
    - **Windows**: Download from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) and add to PATH
@@ -251,3 +247,4 @@ Project Link: [https://github.com/yourusername/ai-creative-studio](https://githu
 ---
 
 **Made with ❤️ by the AI Creative Studio Team**
+
