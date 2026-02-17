@@ -1,0 +1,21 @@
+# Core Backend
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+
+# Hugging Face AI Integration (COMPATIBLE VERSIONS)
+huggingface_hub==0.19.4  # CRITICAL: This version works with accelerate
+diffusers==0.24.0        # Compatible with the above
+transformers==4.35.2
+accelerate==0.24.1       # Compatible version
+
+# Image Processing
+pillow==10.1.0
+
+# Async Support
+aiohttp==3.9.1
+aiofiles==23.2.1
+
+# PyTorch (Windows compatible)
+torch==2.1.2
+torchvision==0.16.2
